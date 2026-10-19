@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>První termodynamický zákon – animace</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --card: #f4f3ee;
+    --text: #1f1e1d;
+    --text2: #5f5e5a;
+    --border: #c9c7bf;
+    --accent: #534AB7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1f1e1d;
+      --card: #2c2c2a;
+      --text: #f1efe8;
+      --text2: #b4b2a9;
+      --border: #5f5e5a;
+      --accent: #AFA9EC;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { font-size: 24px; font-weight: 600; margin: 0 0 4px; }
+  .sub { color: var(--text2); margin: 0 0 20px; }
+  button {
+    font: inherit; font-size: 14px;
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 12px; cursor: pointer;
+  }
+  button:hover { background: var(--card); }
+  button:active { transform: scale(0.98); }
+  button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+  .presets button { font-size: 13px; }
+  .row { display: flex; align-items: center; gap: 12px; margin: 0 0 10px; flex-wrap: wrap; }
+  .row label { font-size: 14px; color: var(--text2); min-width: 200px; }
+  .row input { flex: 1; min-width: 160px; accent-color: var(--accent); }
+  .row .v { font-size: 14px; font-weight: 600; min-width: 64px; text-align: right; }
+  .controls { display: flex; gap: 8px; margin: 6px 0 16px; }
+  canvas { width: 100%; height: auto; display: block; }
+  .metrics {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin: 16px 0 8px;
+  }
+  .m { background: var(--card); border-radius: 8px; padding: 10px 14px; }
+  .m .l { font-size: 13px; color: var(--text2); }
+  .m .n { font-size: 22px; font-weight: 600; }
+  #msg { font-size: 15px; color: var(--text2); margin: 8px 0 24px; }
+  .teorie { background: var(--card); border-radius: 12px; padding: 16px 20px; }
+  .teorie h2 { font-size: 18px; margin: 0 0 8px; }
+  .teorie p { margin: 0 0 10px; }
+  .vzorec { font-size: 18px; font-weight: 600; text-align: center; margin: 8px 0 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>První termodynamický zákon</h1>
+  <p class="sub">Plyn ve válci s pístem – jak teplo a práce mění vnitřní energii</p>
+
+  <div class="presets">
+    <button data-q="80" data-w="0">Zahřívání (V = konst.)</button>
+    <button data-q="-80" data-w="0">Ochlazování (V = konst.)</button>
+    <button data-q="0" data-w="60">Adiabatické stlačení</button>
+    <button data-q="0" data-w="-60">Adiabatická expanze</button>
+    <button data-q="60" data-w="-60">Izotermická expanze</button>
+  </div>
+
+  <div class="row">
+    <label for="q">Teplo Q dodané plynu</label>
+    <input type="range" id="q" min="-100" max="100" step="10" value="80">
+    <span class="v" id="qo">80 J</span>
+  </div>
+  <div class="row">
+    <label for="w">Práce W vykonaná na plyn</label>
+    <input type="range" id="w" min="-100" max="100" step="10" value="0">
+    <span class="v" id="wo">0 J</span>
+  </div>
+
+  <div class="controls">
+    <button id="run" class="primary">&#9654; Spustit děj</button>
+    <button id="reset">&#8635; Výchozí stav</button>
+  </div>
+
+  <canvas id="c" width="680" height="300"></canvas>
+
+  <div class="metrics">
+    <div class="m"><div class="l">Vnitřní energie U</div><div class="n" id="uo">300 J</div></div>
+    <div class="m"><div class="l">Změna ΔU = W + Q</div><div class="n" id="du">+80 J</div></div>
+    <div class="m"><div class="l">Práce plynu W′ = −W</div><div class="n" id="wp">0 J</div></div>
+  </div>
+  <p id="msg"></p>
+
+  <div class="teorie">
+    <h2>Trocha teorie</h2>
+    <div class="vzorec">ΔU = W + Q &nbsp;&nbsp;nebo&nbsp;&nbsp; Q = ΔU + W′</div>
+    <p>Vnitřní energii plynu lze změnit tepelnou výměnou (teplo Q) a konáním práce (W). W je práce, kterou okolní tělesa vykonají na plyn, W′ = −W je práce, kterou vykoná plyn.</p>
+    <p>Q &gt; 0: plyn teplo přijímá. Q &lt; 0: plyn teplo odevzdává. W &gt; 0: okolí plyn stlačuje. W &lt; 0: plyn se rozpíná a koná práci.</p>
+    <p>Vnitřní energie ideálního plynu závisí jen na teplotě, proto rychlejší částice znamenají vyšší teplotu a větší U.</p>
+  </div>
+</main>
+
+<script>
+const c = document.getElementById('c'), x = c.getContext('2d');
+const qs = document.getElementById('q'), ws = document.getElementById('w');
+const L = 220, R = 460, B = 270, P0 = 120;
+let U = 300, py = P0, anim = null;
+
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const parts = [];
+for (let i = 0; i < 45; i++) {
+  const a = Math.random() * Math.PI * 2;
+  parts.push({
+    x: L + 15 + Math.random() * (R - L - 30),
+    y: P0 + 20 + Math.random() * (B - P0 - 40),
+    dx: Math.cos(a), dy: Math.sin(a)
+  });
+}
+
+function tempCol(u) {
+  const t = Math.max(0, Math.min(1, (u - 150) / 350));
+  const r = Math.round(55 + t * (226 - 55));
+  const g = Math.round(138 - t * (138 - 75));
+  const b = Math.round(221 - t * (221 - 74));
+  return `rgb(${r},${g},${b})`;
+}
+
+function updateText() {
+  const q = +qs.value, w = +ws.value, d = q + w;
+  document.getElementById('qo').textContent = q + ' J';
+  document.getElementById('wo').textContent = w + ' J';
+  document.getElementById('du').textContent = (d > 0 ? '+' : '') + d + ' J';
+  document.getElementById('wp').textContent = (-w) + ' J';
+
+  let s;
+  if (d > 0) s = 'Vnitřní energie roste: plyn přijme víc energie, než odevzdá. Teplota stoupá a částice se pohybují rychleji.';
+  else if (d < 0) s = 'Vnitřní energie klesá: plyn odevzdá víc energie, než přijme. Teplota klesá a částice zpomalují.';
+  else s = 'ΔU = 0: přijatá a odevzdaná energie se vyrovnají, teplota plynu se nemění.';
+  if (w > 0) s += ' Okolí koná práci na plyn (stlačení).';
+  if (w < 0) s += ' Plyn koná práci na okolí (rozpínání).';
+  if (q > 0) s += ' Plyn přijímá teplo.';
+  if (q < 0) s += ' Plyn odevzdává teplo.';
+  document.getElementById('msg').textContent = s;
+}
+
+qs.oninput = ws.oninput = updateText;
+
+document.querySelectorAll('.presets button').forEach(b => {
+  b.onclick = () => { qs.value = b.dataset.q; ws.value = b.dataset.w; updateText(); };
+});
+
+document.getElementById('run').onclick = () => {
+  const q = +qs.value, w = +ws.value;
+  const ny = Math.max(50, Math.min(215, py + w * 0.9));
+  anim = { t: 0, u0: U, u1: Math.max(60, U + q + w), p0: py, p1: ny, q, w };
+};
+
+document.getElementById('reset').onclick = () => {
+  anim = null; U = 300; py = P0;
+  document.getElementById('uo').textContent = '300 J';
+};
+
+function arrow(x1, y1, x2, y2, col, label) {
+  x.strokeStyle = col; x.fillStyle = col; x.lineWidth = 4;
+  x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke();
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  x.beginPath();
+  x.moveTo(x2, y2);
+  x.lineTo(x2 - 14 * Math.cos(a - 0.45), y2 - 14 * Math.sin(a - 0.45));
+  x.lineTo(x2 - 14 * Math.cos(a + 0.45), y2 - 14 * Math.sin(a + 0.45));
+  x.fill();
+  x.font = '600 14px system-ui, sans-serif';
+  x.fillText(label, x1 + (x2 > x1 ? 0 : 8), Math.min(y1, y2) - 8);
+}
+
+function frame() {
+  const tp = cssVar('--text'), ts = cssVar('--text2'), bd = cssVar('--border');
+  let ph = 0, cur = null;
+
+  if (anim) {
+    anim.t += 1 / 100;
+    const k = Math.min(1, anim.t);
+    const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    U = anim.u0 + (anim.u1 - anim.u0) * e;
+    py = anim.p0 + (anim.p1 - anim.p0) * e;
+    cur = anim; ph = k;
+    document.getElementById('uo').textContent = Math.round(U) + ' J';
+    if (k >= 1) anim = null;
+  }
+
+  x.clearRect(0, 0, 680, 300);
+
+  // plyn (podbarvení podle teploty)
+  x.fillStyle = tempCol(U); x.globalAlpha = 0.12;
+  x.fillRect(L, py, R - L, B - py); x.globalAlpha = 1;
+
+  // válec
+  x.strokeStyle = tp; x.lineWidth = 3;
+  x.beginPath(); x.moveTo(L, 20); x.lineTo(L, B); x.lineTo(R, B); x.lineTo(R, 20); x.stroke();
+
+  // píst a táhlo
+  x.fillStyle = ts;
+  x.fillRect(L + 2, py - 14, R - L - 4, 14);
+  x.fillRect((L + R) / 2 - 6, 10, 12, py - 24);
+
+  // částice
+  const sp = 1.6 * Math.sqrt(U / 300);
+  x.fillStyle = tempCol(U);
+  for (const p of parts) {
+    p.x += p.dx * sp; p.y += p.dy * sp;
+    if (p.x < L + 6) { p.x = L + 6; p.dx = Math.abs(p.dx); }
+    if (p.x > R - 6) { p.x = R - 6; p.dx = -Math.abs(p.dx); }
+    if (p.y < py + 6) { p.y = py + 6; p.dy = Math.abs(p.dy); }
+    if (p.y > B - 6) { p.y = B - 6; p.dy = -Math.abs(p.dy); }
+    x.beginPath(); x.arc(p.x, p.y, 5, 0, Math.PI * 2); x.fill();
+  }
+
+  // šipky tepla a práce během děje
+  if (cur && ph < 1) {
+    if (cur.q > 0) {
+      for (let i = 0; i < 5; i++) {
+        const fx = L + 30 + i * 45, h = 14 + 6 * Math.sin(Date.now() / 90 + i);
+        x.fillStyle = '#E24B4A';
+        x.beginPath(); x.moveTo(fx - 9, B + 26);
+        x.quadraticCurveTo(fx, B + 26 - h * 2, fx + 9, B + 26); x.fill();
+      }
+      arrow(140, B + 10, L - 8, B - 40, '#E24B4A', 'Q = +' + cur.q + ' J');
+    }
+    if (cur.q < 0) {
+      x.fillStyle = '#378ADD';
+      for (let i = 0; i < 5; i++) x.fillRect(L + 22 + i * 45, B + 8, 18, 14);
+      arrow(L - 8, B - 40, 140, B + 10, '#378ADD', 'Q = ' + cur.q + ' J');
+    }
+    if (cur.w > 0) arrow(R + 60, py - 70, R + 60, py - 10, '#7F77DD', 'W = +' + cur.w + ' J');
+    if (cur.w < 0) arrow(R + 60, py - 10, R + 60, py - 70, '#7F77DD', 'W′ = +' + (-cur.w) + ' J');
+  }
+
+  // sloupec vnitřní energie
+  const bx = 600, bh = Math.min(230, U * 0.4);
+  x.strokeStyle = bd; x.lineWidth = 1; x.strokeRect(bx, 30, 40, 230);
+  x.fillStyle = tempCol(U); x.fillRect(bx, 260 - bh, 40, bh);
+  x.fillStyle = ts; x.font = '13px system-ui, sans-serif'; x.textAlign = 'center';
+  x.fillText('U', bx + 20, 280);
+  x.fillText(Math.round(U) + ' J', bx + 20, 22);
+  x.textAlign = 'left';
+  x.fillText('T ≈ ' + Math.round(U) + ' K', 20, 30);
+
+  requestAnimationFrame(frame);
+}
+
+updateText();
+frame();
+</script>
+</body>
+</html>
